@@ -5,7 +5,7 @@ then
     exit
 fi
 
-build_circuits=( "semaphore" )
+build_circuits=( "semaphore" "zkrole" )
 artifacts_dir="snark-artifacts"
 
 # cleanup
