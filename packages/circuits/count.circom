@@ -1,5 +1,5 @@
 pragma circom 2.0.0;
-include "../node_modules/circomlib/circuits/comparators.circom";
+include "../../node_modules/circomlib/circuits/comparators.circom";
 
 template Count(N) {
     signal input candidates[N];
@@ -19,5 +19,3 @@ template Count(N) {
     }
     totalMatch ==> out;
 }
-
-// component main = Count(5);
