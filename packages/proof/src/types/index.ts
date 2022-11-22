@@ -18,11 +18,36 @@ export type FullProof = {
     publicSignals: PublicSignals
 }
 
+export type FullRegisterProof = {
+    proof: Proof
+    publicRegisterSignals: PublicRegisterSignals
+}
+
+export type FullVerifyProof = {
+    proof: Proof
+    publicVerifySignals: PublicVerifySignals
+}
+
 export type PublicSignals = {
     merkleRoot: BigNumberish
     nullifierHash: BigNumberish
     signalHash: BigNumberish
     externalNullifier: BigNumberish
+}
+
+export type PublicRegisterSignals = {
+    roleCommitment: BigNumberish
+    nullifierHash: BigNumberish
+    candidates: BigNumberish
+}
+
+export type PublicVerifySignals = {
+    merkleRoot: BigNumberish
+    count: BigNumberish
+    nullifierHash: BigNumberish
+    candidates: BigNumberish[]//?
+    externalNullifier: BigNumberish
+    signalHash: BigNumberish
 }
 
 export type SolidityProof = [
