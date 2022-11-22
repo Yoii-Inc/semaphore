@@ -7,7 +7,7 @@ import { BigNumberish, FullVerifyProof, SnarkArtifacts } from "./types"
 
 export default async function generateRoleVerifyProof(
     { trapdoor, nullifier, commitment }: Identity,
-    groupOrMerkleProof: Group | MerkleProof,//ちょっと変えた方が良さそう。
+    groupOrMerkleProof: Group | MerkleProof,
     role: BigNumberish,
     candidates: BigNumberish[],
     externalNullifier: BigNumberish,
@@ -16,7 +16,6 @@ export default async function generateRoleVerifyProof(
 ): Promise<FullVerifyProof> {
     let merkleProof: MerkleProof
 
-    //要相談項目。ロール単体で渡されることはあるのか？
     if ("depth" in groupOrMerkleProof) {
         const index = groupOrMerkleProof.indexOf(commitment)
 
@@ -29,10 +28,6 @@ export default async function generateRoleVerifyProof(
         merkleProof = groupOrMerkleProof
     }
 
-    //もしロール単体で渡されることがないのであれば
-    //merkleProof = groupOrMerkleProof
-
-    //ファイルパスは変更される可能性あり。
     if (!snarkArtifacts) {
         snarkArtifacts = {
             wasmFilePath: `../../snark-artifacts/verify.wasm`,
