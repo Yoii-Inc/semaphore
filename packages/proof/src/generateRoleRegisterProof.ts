@@ -3,7 +3,7 @@ import { groth16 } from "snarkjs"
 import { BigNumberish, FullRegisterProof, SnarkArtifacts } from "./types"
 
 export default async function generateRoleRegisterProof(
-    { trapdoor, nullifier, commitment }: Identity,
+    { trapdoor, nullifier }: Identity,
     role: BigNumberish,
     candidates: BigNumberish[],
     snarkArtifacts?: SnarkArtifacts
@@ -32,7 +32,7 @@ export default async function generateRoleRegisterProof(
         publicRegisterSignals: {
             roleCommitment: publicSignals[0],
             nullifierHash: publicSignals[1],
-            candidates: publicSignals[2]
+            candidates: publicSignals.slice(2)
         }
     }
 }

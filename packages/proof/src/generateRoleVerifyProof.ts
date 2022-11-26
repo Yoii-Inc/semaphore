@@ -6,9 +6,8 @@ import generateSignalHash from "./generateSignalHash"
 import { BigNumberish, FullVerifyProof, SnarkArtifacts } from "./types"
 
 export default async function generateRoleVerifyProof(
-    { trapdoor, nullifier, commitment }: Identity,
+    { trapdoor, nullifier, role, commitment }: Identity,
     groupOrMerkleProof: Group | MerkleProof,
-    role: BigNumberish,
     candidates: BigNumberish[],
     externalNullifier: BigNumberish,
     signal: string,
@@ -20,7 +19,7 @@ export default async function generateRoleVerifyProof(
         const index = groupOrMerkleProof.indexOf(commitment)
 
         if (index === -1) {
-            throw new Error("The identity is not part of the roles")
+            throw new Error("The identity is not part of the group")
         }
 
         merkleProof = groupOrMerkleProof.generateProofOfMembership(index)
@@ -56,9 +55,9 @@ export default async function generateRoleVerifyProof(
             merkleRoot: publicSignals[0],
             count: publicSignals[1],
             nullifierHash: publicSignals[2],
-            candidates: publicSignals[5],
             externalNullifier: publicSignals[3],
-            signalHash: publicSignals[4]
+            signalHash: publicSignals[4],
+            candidates: publicSignals.slice(5)
         }
     }
 }

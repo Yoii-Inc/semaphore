@@ -5,13 +5,11 @@ import { getCurveFromName } from "ffjavascript"
 import fs from "fs"
 import generateNullifierHash from "./generateNullifierHash"
 import generateRoleRegisterNullifierHash from "./generateRoleRegisterNullifierHash"
-import generateProof from "./generateProof"
 import generateRoleRegisterProof from "./generateRoleRegisterProof"
 import generateRoleVerifyProof from "./generateRoleVerifyProof"
 import generateSignalHash from "./generateSignalHash"
 import packToSolidityProof from "./packToSolidityProof"
-import { FullProof, FullVerifyProof, FullRegisterProof } from "./types"
-import verifyProof from "./verifyProof"
+import { FullVerifyProof, FullRegisterProof } from "./types"
 import verifyRoleRegisterProof from "./verifyRoleRegisterProof"
 import verifyRoleVerifyProof from "./verifyRoleVerifyProof"
 
@@ -20,10 +18,6 @@ describe("Proof", () => {
 
     const externalNullifier = "1"
     const signal = "0x111"
-
-    const wasmFilePath = `./snark-artifacts/semaphore.wasm`
-    const zkeyFilePath = `./snark-artifacts/semaphore.zkey`
-    const verificationKeyPath = `./snark-artifacts/semaphore.json`
 
     const roleRegisterWasmFilePath = `./snark-artifacts/register.wasm`
     const roleRegisterZkeyFilePath = `./snark-artifacts/register.zkey`
@@ -35,7 +29,6 @@ describe("Proof", () => {
 
     const identity = new Identity()
 
-    let fullProof: FullProof
     let fullRegisterProof: FullRegisterProof
     let fullVerifyProof: FullVerifyProof
     let curve: any
@@ -48,115 +41,33 @@ describe("Proof", () => {
         await curve.terminate()
     })
 
-    describe("# generateProof", () => {
-        it("Should not generate Semaphore proofs if the identity is not part of the group", async () => {
-            const group = new Group(treeDepth)
+    describe("# generateRoleRegisterProof", () => {
+        it("Should not generate a RoleRegister proof with default snark artifacts with Node.js", async () => {
+            const role = BigInt(1)
 
-            group.addMembers([BigInt(1), BigInt(2)])
+            const candidates = [BigInt(1),BigInt(2),BigInt(3),BigInt(4),BigInt(5)]
 
-            const fun = () =>
-                generateProof(identity, group, externalNullifier, signal, {
-                    wasmFilePath,
-                    zkeyFilePath
-                })
-
-            await expect(fun).rejects.toThrow("The identity is not part of the group")
-        })
-
-        it("Should not generate a Semaphore proof with default snark artifacts with Node.js", async () => {
-            const group = new Group(treeDepth)
-
-            group.addMembers([BigInt(1), BigInt(2), identity.commitment])
-
-            const fun = () => generateProof(identity, group, externalNullifier, signal)
+            const fun = () => generateRoleRegisterProof(identity, role, candidates)
 
             await expect(fun).rejects.toThrow("ENOENT: no such file or directory")
         })
 
-        it("Should generate a Semaphore proof passing a group as parameter", async () => {
-            const group = new Group(treeDepth)
-
-            group.addMembers([BigInt(1), BigInt(2), identity.commitment])
-
-            fullProof = await generateProof(identity, group, externalNullifier, signal, {
-                wasmFilePath,
-                zkeyFilePath
-            })
-
-            expect(typeof fullProof).toBe("object")
-            expect(fullProof.publicSignals.externalNullifier).toBe(externalNullifier)
-            expect(fullProof.publicSignals.merkleRoot).toBe(group.root.toString())
-        }, 20000)
-
-        it("Should generate a Semaphore proof passing a Merkle proof as parametr", async () => {
-            const group = new Group(treeDepth)
-
-            group.addMembers([BigInt(1), BigInt(2), identity.commitment])
-
-            fullProof = await generateProof(identity, group.generateProofOfMembership(2), externalNullifier, signal, {
-                wasmFilePath,
-                zkeyFilePath
-            })
-
-            expect(typeof fullProof).toBe("object")
-            expect(fullProof.publicSignals.externalNullifier).toBe(externalNullifier)
-            expect(fullProof.publicSignals.merkleRoot).toBe(group.root.toString())
-        }, 20000)
-    })
-
-    describe("# generateSignalHash", () => {
-        it("Should generate a valid signal hash", async () => {
-            const signalHash = generateSignalHash(signal)
-
-            expect(signalHash.toString()).toBe(fullProof.publicSignals.signalHash)
-        })
-
-        it("Should generate a valid signal hash by passing a valid hex string", async () => {
-            const signalHash = generateSignalHash(formatBytes32String(signal))
-
-            expect(signalHash.toString()).toBe(fullProof.publicSignals.signalHash)
-        })
-    })
-
-    describe("# generateNullifierHash", () => {
-        it("Should generate a valid nullifier hash", async () => {
-            const nullifierHash = generateNullifierHash(externalNullifier, identity.getNullifier())
-
-            expect(nullifierHash.toString()).toBe(fullProof.publicSignals.nullifierHash)
-        })
-    })
-
-    describe("# packToSolidityProof", () => {
-        it("Should return a Solidity proof", async () => {
-            const solidityProof = packToSolidityProof(fullProof.proof)
-
-            expect(solidityProof).toHaveLength(8)
-        })
-    })
-
-    describe("# verifyProof", () => {
-        it("Should generate and verify a Semaphore proof", async () => {
-            const verificationKey = JSON.parse(fs.readFileSync(verificationKeyPath, "utf-8"))
-
-            const response = await verifyProof(verificationKey, fullProof)
-
-            expect(response).toBe(true)
-        })
-    })
-
-    describe("# generateRoleRegisterProof", () => {
         it("Should generate a Register proof", async () => {
             const role = BigInt(1)
 
             const candidates = [BigInt(1),BigInt(2),BigInt(3),BigInt(4),BigInt(5)]
 
-            fullRegisterProof = await generateRoleRegisterProof(identity, role,candidates, {
+            fullRegisterProof = await generateRoleRegisterProof(identity, role, candidates, {
                 wasmFilePath: roleRegisterWasmFilePath,
                 zkeyFilePath: roleRegisterZkeyFilePath
             })
 
+            identity.addRole(role)
+            identity.updateCommitment()
+
             expect(typeof fullRegisterProof).toBe("object")
-            //expect(fullRegisterProof.publicRegisterSignals.candidates).toBe(candidates)
+            expect(fullRegisterProof.publicRegisterSignals.roleCommitment).toBe(identity.commitment.toString())
+            expect(fullRegisterProof.publicRegisterSignals.candidates).toStrictEqual(candidates.map(e => String(e)))
         }, 20000)
     })
 
@@ -165,6 +76,14 @@ describe("Proof", () => {
             const nullifierHash = generateRoleRegisterNullifierHash(identity.getNullifier())
 
             expect(nullifierHash.toString()).toBe(fullRegisterProof.publicRegisterSignals.nullifierHash)
+        })
+    })
+
+    describe("# packToSolidityRoleRegisterProof", () => {
+        it("Should return a Solidity proof", async () => {
+            const solidityProof = packToSolidityProof(fullRegisterProof.proof)
+
+            expect(solidityProof).toHaveLength(8)
         })
     })
 
@@ -179,68 +98,149 @@ describe("Proof", () => {
     })
 
     describe("# generateRoleVerifyProof", () => {
-        it("Should not generate Semaphore proofs if the identity is not part of the group", async () => {
+        it("Should not generate RoleVerify proofs if the identity is not part of the group", async () => {
             const group = new Group(treeDepth)
 
             group.addMembers([BigInt(1), BigInt(2)])
 
             const fun = () =>
-                generateRoleVerifyProof(identity, group, BigInt(3), [BigInt(2)],  externalNullifier, signal, {
+                generateRoleVerifyProof(identity, group, [BigInt(2)],  externalNullifier, signal, {
                     wasmFilePath: roleVerifyWasmFilePath,
                     zkeyFilePath: roleVerifyZkeyFilePath
                 })
 
-            await expect(fun).rejects.toThrow("The identity is not part of the role")
+            await expect(fun).rejects.toThrow("The identity is not part of the group")
         })
 
-        it("Should not generate a Semaphore proof with default snark artifacts with Node.js", async () => {
+        it("Should not generate a RoleVerify proof with default snark artifacts with Node.js", async () => {
             const group = new Group(treeDepth)
 
             group.addMembers([BigInt(1), BigInt(2), identity.commitment])
 
-            const role = BigInt(1)
-            const candidates = [BigInt(1), BigInt(2)]
+            const candidates = [BigInt(1),BigInt(2),BigInt(3),BigInt(4),BigInt(5)]
 
-            const fun = () => generateRoleVerifyProof(identity, group, role, candidates, externalNullifier, signal)
+            const fun = () => generateRoleVerifyProof(identity, group, candidates, externalNullifier, signal)
 
             await expect(fun).rejects.toThrow("ENOENT: no such file or directory")
         })
 
-        it("Should generate a Semaphore proof passing a group as parameter", async () => {
+        it("Should generate a RoleVerify proof passing a group as parameter with role not in candidates", async () => {
             const group = new Group(treeDepth)
+
+            identity.addRole(BigInt(1))
+            identity.updateCommitment()
 
             group.addMembers([BigInt(1), BigInt(2), identity.commitment])
 
-            const role = BigInt(1)
-            const candidates = [BigInt(1),BigInt(2),BigInt(3),BigInt(4),BigInt(5)]
+            const candidates = [BigInt(2),BigInt(3),BigInt(4),BigInt(5),BigInt(6)]
 
-            fullVerifyProof = await generateRoleVerifyProof(identity, group, role, candidates, externalNullifier, signal, {
+            fullVerifyProof = await generateRoleVerifyProof(identity, group, candidates, externalNullifier, signal, {
                 wasmFilePath: roleVerifyWasmFilePath,
                 zkeyFilePath: roleVerifyZkeyFilePath
             })
 
             expect(typeof fullVerifyProof).toBe("object")
             expect(fullVerifyProof.publicVerifySignals.externalNullifier).toBe(externalNullifier)
-            //expect(fullVerifyProof.publicVerifySignals.merkleRoot).toBe(group.root.toString())
+            expect(fullVerifyProof.publicVerifySignals.merkleRoot).toBe(group.root.toString())
+            expect(fullVerifyProof.publicVerifySignals.candidates).toStrictEqual(candidates.map(e => String(e)))
+            expect(fullVerifyProof.publicVerifySignals.count).toBe("0")
         }, 20000)
 
-        it("Should generate a Semaphore proof passing a Merkle proof as parametr", async () => {
+        it("Should generate a RoleVerify proof passing a Merkle proof as parameter  with role not in candidates", async () => {
             const group = new Group(treeDepth)
+
+            identity.addRole(BigInt(1))
+            identity.updateCommitment()
 
             group.addMembers([BigInt(1), BigInt(2), identity.commitment])
 
-            const role = BigInt(1)
-            const candidates = [BigInt(1),BigInt(2),BigInt(3),BigInt(4),BigInt(5)]
+            const candidates = [BigInt(2),BigInt(3),BigInt(4),BigInt(5),BigInt(6)]
 
-            fullVerifyProof = await generateRoleVerifyProof(identity, group.generateProofOfMembership(2), role, candidates, externalNullifier, signal, {
+            fullVerifyProof = await generateRoleVerifyProof(identity, group.generateProofOfMembership(2), candidates, externalNullifier, signal, {
                 wasmFilePath: roleVerifyWasmFilePath,
                 zkeyFilePath: roleVerifyZkeyFilePath
             })
 
             expect(typeof fullVerifyProof).toBe("object")
             expect(fullVerifyProof.publicVerifySignals.externalNullifier).toBe(externalNullifier)
-            //expect(fullVerifyProof.publicVerifySignals.merkleRoot).toBe(group.root.toString())
+            expect(fullVerifyProof.publicVerifySignals.merkleRoot).toBe(group.root.toString())
+            expect(fullVerifyProof.publicVerifySignals.candidates).toStrictEqual(candidates.map(e => String(e)))
+            expect(fullVerifyProof.publicVerifySignals.count).toBe("0")
         }, 20000)
+
+        it("Should generate a RoleVerify proof passing a group as parameter with role in candidates", async () => {
+            const group = new Group(treeDepth)
+
+            identity.addRole(BigInt(1))
+            identity.updateCommitment()
+
+            group.addMembers([BigInt(1), BigInt(2), identity.commitment])
+
+            const candidates = [BigInt(1),BigInt(2),BigInt(3),BigInt(4),BigInt(5)]
+
+            fullVerifyProof = await generateRoleVerifyProof(identity, group, candidates, externalNullifier, signal, {
+                wasmFilePath: roleVerifyWasmFilePath,
+                zkeyFilePath: roleVerifyZkeyFilePath
+            })
+
+            expect(typeof fullVerifyProof).toBe("object")
+            expect(fullVerifyProof.publicVerifySignals.externalNullifier).toBe(externalNullifier)
+            expect(fullVerifyProof.publicVerifySignals.merkleRoot).toBe(group.root.toString())
+            expect(fullVerifyProof.publicVerifySignals.candidates).toStrictEqual(candidates.map(e => String(e)))
+            expect(fullVerifyProof.publicVerifySignals.count).toBe("1")
+        }, 20000)
+
+        it("Should generate a RoleVerify proof passing a Merkle proof as parameter with role in candidates", async () => {
+            const group = new Group(treeDepth)
+
+            identity.addRole(BigInt(1))
+            identity.updateCommitment()
+
+            group.addMembers([BigInt(1), BigInt(2), identity.commitment])
+
+            const candidates = [BigInt(1),BigInt(2),BigInt(3),BigInt(4),BigInt(5)]
+
+            fullVerifyProof = await generateRoleVerifyProof(identity, group.generateProofOfMembership(2), candidates, externalNullifier, signal, {
+                wasmFilePath: roleVerifyWasmFilePath,
+                zkeyFilePath: roleVerifyZkeyFilePath
+            })
+
+            expect(typeof fullVerifyProof).toBe("object")
+            expect(fullVerifyProof.publicVerifySignals.externalNullifier).toBe(externalNullifier)
+            expect(fullVerifyProof.publicVerifySignals.merkleRoot).toBe(group.root.toString())
+            expect(fullVerifyProof.publicVerifySignals.candidates).toStrictEqual(candidates.map(e => String(e)))
+            expect(fullVerifyProof.publicVerifySignals.count).toBe("1")
+        }, 20000)
+    })
+
+    describe("# generateSignalHash", () => {
+        it("Should generate a valid signal hash", async () => {
+            const signalHash = generateSignalHash(signal)
+
+            expect(signalHash.toString()).toBe(fullVerifyProof.publicVerifySignals.signalHash)
+        })
+
+        it("Should generate a valid signal hash by passing a valid hex string", async () => {
+            const signalHash = generateSignalHash(formatBytes32String(signal))
+
+            expect(signalHash.toString()).toBe(fullVerifyProof.publicVerifySignals.signalHash)
+        })
+    })
+
+    describe("# generateNullifierHash", () => {
+        it("Should generate a valid nullifier hash", async () => {
+            const nullifierHash = generateNullifierHash(externalNullifier, identity.getNullifier())
+
+            expect(nullifierHash.toString()).toBe(fullVerifyProof.publicVerifySignals.nullifierHash)
+        })
+    })
+
+    describe("# packToSolidityRoleVerifyProof", () => {
+        it("Should return a Solidity proof", async () => {
+            const solidityProof = packToSolidityProof(fullVerifyProof.proof)
+
+            expect(solidityProof).toHaveLength(8)
+        })
     })
 
     describe("# verifyRoleVerifyProof", () => {
