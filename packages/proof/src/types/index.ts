@@ -38,14 +38,14 @@ export type PublicSignals = {
 export type PublicRegisterSignals = {
     roleCommitment: BigNumberish
     nullifierHash: BigNumberish
-    candidates: BigNumberish
+    candidates: BigNumberish[]
 }
 
 export type PublicVerifySignals = {
     merkleRoot: BigNumberish
     count: BigNumberish
     nullifierHash: BigNumberish
-    candidates: BigNumberish[]//?
+    candidates: BigNumberish[]
     externalNullifier: BigNumberish
     signalHash: BigNumberish
 }

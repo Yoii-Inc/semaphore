@@ -16,7 +16,7 @@ export default async function generateRoleRegisterProof(
         }
     }
 
-    const { proof, publicRegisterSignals } = await groth16.fullProve(
+    const { proof, publicSignals } = await groth16.fullProve(
         {
             identityNullifier: nullifier,
             identityTrapdoor: trapdoor,
@@ -30,9 +30,9 @@ export default async function generateRoleRegisterProof(
     return {
         proof,
         publicRegisterSignals: {
-            roleCommitment: publicRegisterSignals[0],
-            nullifierHash: publicRegisterSignals[1],
-            candidates: publicRegisterSignals[2]
+            roleCommitment: publicSignals[0],
+            nullifierHash: publicSignals[1],
+            candidates: publicSignals[2]
         }
     }
 }

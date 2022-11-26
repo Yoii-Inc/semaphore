@@ -35,7 +35,7 @@ export default async function generateRoleVerifyProof(
         }
     }
 
-    const { proof, publicVerifySignals } = await groth16.fullProve(
+    const { proof, publicSignals } = await groth16.fullProve(
         {
             identityNullifier: nullifier,
             identityTrapdoor: trapdoor,
@@ -53,12 +53,12 @@ export default async function generateRoleVerifyProof(
     return {
         proof,
         publicVerifySignals: {
-            merkleRoot: publicVerifySignals[0],
-            count: publicVerifySignals[1],
-            nullifierHash: publicVerifySignals[2],
-            candidates: publicVerifySignals[3],
-            externalNullifier: publicVerifySignals[4],
-            signalHash: publicVerifySignals[5]
+            merkleRoot: publicSignals[0],
+            count: publicSignals[1],
+            nullifierHash: publicSignals[2],
+            candidates: publicSignals[5],
+            externalNullifier: publicSignals[3],
+            signalHash: publicSignals[4]
         }
     }
 }
