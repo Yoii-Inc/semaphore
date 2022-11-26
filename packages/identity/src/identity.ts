@@ -6,6 +6,7 @@ import { generateCommitment, genRandomNumber, isJsonArray, sha256 } from "./util
 export default class Identity {
     private _trapdoor: bigint
     private _nullifier: bigint
+    private _role: bigint
     private _commitment: bigint
 
     /**
@@ -13,10 +14,12 @@ export default class Identity {
      * @param identityOrMessage Additional data needed to create identity for given strategy.
      */
     constructor(identityOrMessage?: string) {
+        this._role = BigInt(-1)
+
         if (identityOrMessage === undefined) {
             this._trapdoor = genRandomNumber()
             this._nullifier = genRandomNumber()
-            this._commitment = generateCommitment(this._nullifier, this._trapdoor)
+            this._commitment = generateCommitment(this._nullifier, this._trapdoor, this._role)
 
             return
         }
@@ -28,7 +31,7 @@ export default class Identity {
 
             this._trapdoor = BigNumber.from(sha256(`${messageHash}identity_trapdoor`)).toBigInt()
             this._nullifier = BigNumber.from(sha256(`${messageHash}identity_nullifier`)).toBigInt()
-            this._commitment = generateCommitment(this._nullifier, this._trapdoor)
+            this._commitment = generateCommitment(this._nullifier, this._trapdoor, this._role)
 
             return
         }
@@ -37,7 +40,7 @@ export default class Identity {
 
         this._trapdoor = BigNumber.from(`0x${trapdoor}`).toBigInt()
         this._nullifier = BigNumber.from(`0x${nullifier}`).toBigInt()
-        this._commitment = generateCommitment(this._nullifier, this._trapdoor)
+        this._commitment = generateCommitment(this._nullifier, this._trapdoor, this._role)
     }
 
     /**
@@ -73,6 +76,29 @@ export default class Identity {
     }
 
     /**
+     * Returns the role.
+     * @returns The role.
+     */
+     public get role(): bigint {
+        return this._role
+    }
+
+    /**
+     * Returns the role.
+     * @returns The role.
+     */
+    public getRole(): bigint {
+        return this._role
+    }
+
+    /**
+     * Add the role.
+     */
+     public addRole(role: bigint): void {
+        this._role = role
+    }
+
+    /**
      * Returns the identity commitment.
      * @returns The identity commitment.
      */
@@ -90,19 +116,27 @@ export default class Identity {
 
     /**
      * @deprecated since version 2.6.0
-     * Generates the identity commitment from trapdoor and nullifier.
+     * Generates the identity commitment from trapdoor and nullifier and role.
      * @returns identity commitment
      */
     public generateCommitment(): bigint {
-        return poseidon([poseidon([this._nullifier, this._trapdoor])])
+        return poseidon([poseidon([this._nullifier, this._trapdoor]), this._role])
     }
 
     /**
-     * Returns a JSON string with trapdoor and nullifier. It can be used
+     * @deprecated since version 2.6.0
+     * Updates the identity commitment from trapdoor and nullifier and role.
+     */
+    public updateCommitment(): void {
+        this._commitment = poseidon([poseidon([this._nullifier, this._trapdoor]), this._role])
+    }
+
+    /**
+     * Returns a JSON string with trapdoor and nullifier and role. It can be used
      * to export the identity and reuse it later.
      * @returns The string representation of the identity.
      */
     public toString(): string {
-        return JSON.stringify([this._trapdoor.toString(16), this._nullifier.toString(16)])
+        return JSON.stringify([this._trapdoor.toString(16), this._nullifier.toString(16), this._role.toString(16)])
     }
 }
