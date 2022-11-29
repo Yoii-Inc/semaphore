@@ -28,6 +28,7 @@ describe("Identity", () => {
 
             expect(identity1.trapdoor).toBe(identity2.getTrapdoor())
             expect(identity1.nullifier).toBe(identity2.getNullifier())
+            expect(identity1.role).toBe(identity2.getRole())
         })
 
         it("Should create deterministic identities from number/boolean messages", () => {
@@ -38,8 +39,10 @@ describe("Identity", () => {
 
             expect(identity1.trapdoor).toBe(identity2.getTrapdoor())
             expect(identity1.nullifier).toBe(identity2.getNullifier())
+            expect(identity1.role).toBe(identity2.getRole())
             expect(identity3.trapdoor).toBe(identity4.getTrapdoor())
             expect(identity3.nullifier).toBe(identity4.getNullifier())
+            expect(identity3.role).toBe(identity4.getRole())
         })
 
         it("Should not recreate an existing invalid identity", () => {
@@ -82,6 +85,32 @@ describe("Identity", () => {
         })
     })
 
+    describe("# getRole", () => {
+        it("Should return the role", () => {
+            const identity = new Identity("message")
+
+            const role = identity.getRole()
+
+            expect(role).toBe(
+                BigInt("-1")
+            )
+        })
+    })
+
+    describe("# addRole", () => {
+        it("Should return the role", () => {
+            const identity = new Identity("message")
+
+            identity.addRole(BigInt(3))
+
+            const role = identity.getRole()
+
+            expect(role).toBe(
+                BigInt(3)
+            )
+        })
+    })
+
     describe("# generateCommitment", () => {
         it("Should generate an identity commitment", () => {
             const identity = new Identity("message")
@@ -89,7 +118,23 @@ describe("Identity", () => {
             const commitment = identity.generateCommitment()
 
             expect(commitment).toBe(
-                BigInt("1720349790382552497189398984241859233944354304766757200361065203741879866188")
+                BigInt("14332087105049282813012894387827696996696987547667613616331022619112408530827")
+            )
+        })
+    })
+
+    describe("# updateCommitment", () => {
+        it("Should update an identity commitment", () => {
+            const identity = new Identity("message")
+
+            identity.addRole(BigInt(3))
+
+            identity.updateCommitment()
+
+            const commitment = identity.generateCommitment()
+
+            expect(commitment).toBe(
+                BigInt("12567979771383377264490736761048592220331341525317219888257167235923933777641")
             )
         })
     })
@@ -106,10 +151,13 @@ describe("Identity", () => {
         it("Should return a valid identity string", () => {
             const identity = new Identity("message")
 
-            const [trapdoor, nullifier] = JSON.parse(identity.toString())
+            identity.addRole(BigInt(3))
+
+            const [trapdoor, nullifier, role] = JSON.parse(identity.toString())
 
             expect(BigNumber.from(`0x${trapdoor}`).toBigInt()).toBe(identity.getTrapdoor())
             expect(BigNumber.from(`0x${nullifier}`).toBigInt()).toBe(identity.getNullifier())
+            expect(BigNumber.from(`0x${role}`).toBigInt()).toBe(identity.getRole())
         })
     })
 })
