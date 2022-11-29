@@ -26,6 +26,6 @@ do
     node node_modules/snarkjs/cli.js groth16 setup $artifacts_dir/$circuit.r1cs $artifacts_dir/dev_final.ptau $artifacts_dir/$circuit.zkey
     node node_modules/snarkjs/cli.js zkey export verificationkey $artifacts_dir/$circuit.zkey $artifacts_dir/$circuit.json
     mv $artifacts_dir/${circuit}_js/$circuit.wasm $artifacts_dir/$circuit.wasm
-    node node_modules/snarkjs/cli.js zkey export solidityverifier $artifacts_dir/$circuit.zkey $verifier_dir/verifier.sol
+    node node_modules/snarkjs/cli.js zkey export solidityverifier $artifacts_dir/$circuit.zkey $verifier_dir/${circuit}_verifier.sol
 done
 
