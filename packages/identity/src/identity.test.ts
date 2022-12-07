@@ -20,6 +20,7 @@ describe("Identity", () => {
             expect(identity1.trapdoor).not.toBe(identity2.getTrapdoor())
             expect(identity1.nullifier).not.toBe(identity2.getNullifier())
             expect(identity1.commitment).not.toBe(identity2.getCommitment())
+            expect(identity1.roleCommitment).not.toBe(identity2.getRoleCommitment())
         })
 
         it("Should create deterministic identities from a message", () => {
@@ -118,22 +119,34 @@ describe("Identity", () => {
             const commitment = identity.generateCommitment()
 
             expect(commitment).toBe(
+                BigInt("1720349790382552497189398984241859233944354304766757200361065203741879866188")
+            )
+        })
+    })
+
+    describe("# generateRoleCommitment", () => {
+        it("Should generate an identity role commitment", () => {
+            const identity = new Identity("message")
+
+            const roleCommitment = identity.generateRoleCommitment()
+
+            expect(roleCommitment).toBe(
                 BigInt("14332087105049282813012894387827696996696987547667613616331022619112408530827")
             )
         })
     })
 
-    describe("# updateCommitment", () => {
-        it("Should update an identity commitment", () => {
+    describe("# updateRoleCommitment", () => {
+        it("Should update an identity role commitment", () => {
             const identity = new Identity("message")
 
             identity.addRole(BigInt(3))
 
-            identity.updateCommitment()
+            identity.updateRoleCommitment()
 
-            const commitment = identity.generateCommitment()
+            const roleCommitment = identity.generateRoleCommitment()
 
-            expect(commitment).toBe(
+            expect(roleCommitment).toBe(
                 BigInt("12567979771383377264490736761048592220331341525317219888257167235923933777641")
             )
         })
@@ -151,9 +164,18 @@ describe("Identity", () => {
         it("Should return a valid identity string", () => {
             const identity = new Identity("message")
 
+            const [trapdoor, nullifier] = JSON.parse(identity.toString())
+
+            expect(BigNumber.from(`0x${trapdoor}`).toBigInt()).toBe(identity.getTrapdoor())
+            expect(BigNumber.from(`0x${nullifier}`).toBigInt()).toBe(identity.getNullifier())
+        })
+
+        it("Should return a valid identity string with role", () => {
+            const identity = new Identity("message")
+
             identity.addRole(BigInt(3))
 
-            const [trapdoor, nullifier, role] = JSON.parse(identity.toString())
+            const [trapdoor, nullifier, role] = JSON.parse(identity.toStringRole())
 
             expect(BigNumber.from(`0x${trapdoor}`).toBigInt()).toBe(identity.getTrapdoor())
             expect(BigNumber.from(`0x${nullifier}`).toBigInt()).toBe(identity.getNullifier())

@@ -30,7 +30,18 @@ export function genRandomNumber(numberOfBytes = 31): bigint {
  * @param trapdoor The identity trapdoor.
  * @returns identity commitment
  */
-export function generateCommitment(nullifier: bigint, trapdoor: bigint, role: bigint): bigint {
+export function generateCommitment(nullifier: bigint, trapdoor: bigint): bigint {
+    return poseidon([poseidon([nullifier, trapdoor])])
+}
+
+/**
+ * Generates the identity commitment from trapdoor and nullifier and role.
+ * @param nullifier The identity nullifier.
+ * @param trapdoor The identity trapdoor.
+ * @param role The role.
+ * @returns identity commitment
+ */
+ export function generateRoleCommitment(nullifier: bigint, trapdoor: bigint, role: bigint): bigint {
     return poseidon([poseidon([nullifier, trapdoor]), role])
 }
 
