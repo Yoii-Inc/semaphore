@@ -6,7 +6,7 @@ import generateSignalHash from "./generateSignalHash"
 import { BigNumberish, FullVerifyProof, SnarkArtifacts } from "./types"
 
 export default async function generateRoleVerifyProof(
-    { trapdoor, nullifier, role, commitment }: Identity,
+    { trapdoor, nullifier, role, roleCommitment }: Identity,
     groupOrMerkleProof: Group | MerkleProof,
     candidates: BigNumberish[],
     externalNullifier: BigNumberish,
@@ -16,7 +16,7 @@ export default async function generateRoleVerifyProof(
     let merkleProof: MerkleProof
 
     if ("depth" in groupOrMerkleProof) {
-        const index = groupOrMerkleProof.indexOf(commitment)
+        const index = groupOrMerkleProof.indexOf(roleCommitment)
 
         if (index === -1) {
             throw new Error("The identity is not part of the group")
