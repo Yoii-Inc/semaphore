@@ -34,6 +34,12 @@ export default async function generateRoleVerifyProof(
         }
     }
 
+    const length = candidates.length
+    if (candidates.length < 5) {
+        const zero = new Array(5-length).fill(0)
+        candidates = candidates.concat(zero)
+    }
+
     const { proof, publicSignals } = await groth16.fullProve(
         {
             identityNullifier: nullifier,
@@ -57,7 +63,7 @@ export default async function generateRoleVerifyProof(
             nullifierHash: publicSignals[2],
             externalNullifier: publicSignals[3],
             signalHash: publicSignals[4],
-            candidates: publicSignals.slice(5)
+            candidates: publicSignals.slice(5,5+length)
         }
     }
 }

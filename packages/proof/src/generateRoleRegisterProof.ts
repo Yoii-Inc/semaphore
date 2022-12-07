@@ -16,6 +16,12 @@ export default async function generateRoleRegisterProof(
         }
     }
 
+    const length = candidates.length
+    if (candidates.length < 5) {
+        const zero = new Array(5-length).fill(0)
+        candidates = candidates.concat(zero)
+    }
+
     const { proof, publicSignals } = await groth16.fullProve(
         {
             identityNullifier: nullifier,
@@ -32,7 +38,7 @@ export default async function generateRoleRegisterProof(
         publicRegisterSignals: {
             roleCommitment: publicSignals[0],
             nullifierHash: publicSignals[1],
-            candidates: publicSignals.slice(2)
+            candidates: publicSignals.slice(2,2+length)
         }
     }
 }
