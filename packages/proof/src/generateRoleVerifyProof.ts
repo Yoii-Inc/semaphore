@@ -6,7 +6,7 @@ import generateSignalHash from "./generateSignalHash"
 import { BigNumberish, FullVerifyProof, SnarkArtifacts } from "./types"
 
 export default async function generateRoleVerifyProof(
-    { trapdoor, nullifier, role, commitment }: Identity,
+    { trapdoor, nullifier, role, roleCommitment }: Identity,
     groupOrMerkleProof: Group | MerkleProof,
     candidates: BigNumberish[],
     externalNullifier: BigNumberish,
@@ -16,7 +16,7 @@ export default async function generateRoleVerifyProof(
     let merkleProof: MerkleProof
 
     if ("depth" in groupOrMerkleProof) {
-        const index = groupOrMerkleProof.indexOf(commitment)
+        const index = groupOrMerkleProof.indexOf(roleCommitment)
 
         if (index === -1) {
             throw new Error("The identity is not part of the group")
@@ -32,6 +32,12 @@ export default async function generateRoleVerifyProof(
             wasmFilePath: `../../snark-artifacts/verify.wasm`,
             zkeyFilePath: `../../snark-artifacts/verify.zkey`
         }
+    }
+
+    const length = candidates.length
+    if (candidates.length < 5) {
+        const zero = new Array(5-length).fill(0)
+        candidates = candidates.concat(zero)
     }
 
     const { proof, publicSignals } = await groth16.fullProve(
@@ -57,7 +63,7 @@ export default async function generateRoleVerifyProof(
             nullifierHash: publicSignals[2],
             externalNullifier: publicSignals[3],
             signalHash: publicSignals[4],
-            candidates: publicSignals.slice(5)
+            candidates: publicSignals.slice(5,5+length)
         }
     }
 }
